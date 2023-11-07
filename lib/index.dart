@@ -10,7 +10,7 @@ import 'package:dart_git/plumbing/objects/blob.dart';
 extension Index on GitRepository {
   Result<void> add(String pathSpec) {
     final stopwatch = Stopwatch()..start();
-    print("git-dart.add() 1 took ${(stopwatch..stop()).elapsed}.");
+    print("git-dart.add() 1 took ${(stopwatch..stop()).elapsed}!");
     stopwatch.reset();
 
     pathSpec = normalizePath(pathSpec);
