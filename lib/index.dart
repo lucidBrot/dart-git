@@ -69,8 +69,8 @@ extension Index on GitRepository {
     //     the index?
     // Save that file as a blob
     var data = file.readAsBytesSync();
-    var blob = GitBlob(data, null);
     stopwatch.stop();
+    var blob = GitBlob(data, null);
     var hashR = objStorage.writeObject(blob);
     if (hashR.isFailure) {
       return fail(hashR);
