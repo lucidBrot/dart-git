@@ -64,8 +64,24 @@ extension Index on GitRepository {
       return Result.fail(ex);
     }
 
-    // LB: TODO: Why do we read the whole file even if it may already be present in
-    //     the index?
+    var pathSpec = filePath;
+    if (pathSpec.startsWith(workTree)) {
+      pathSpec = filePath.substring(workTree.length);
+    }
+    // LB: Wait is this a linear search over all files??
+    //     Maybe... but omitting it fully does not speed things up.
+    var entry = index.entries.firstWhereOrNull((e) => e.path == pathSpec);
+    var stat = FileStat.statSync(filePath);
+    if (entry != null &&
+        entry.cTime == stat.changed &&
+        entry.mTime == stat.modified &&
+        entry.fileSize == stat.size){
+        // We assume it is the same file.
+        return Result(entry);
+    }
+
+    // LB: Note that this reads and hashes the file, even if nothing changed.
+    //     .. hence the check above using the ctime/mtime.
     // Save that file as a blob (takes ~0.3 seconds)
     var data = file.readAsBytesSync();
     stopwatch.start();
@@ -76,20 +92,10 @@ extension Index on GitRepository {
     if (hashR.isFailure) {
       return fail(hashR);
     }
-    // LB: TODO: how does this hash work? does that get recomputed every time?
-    //     if the mtime/ctime is the same as it used to be, I should just assume that it has not changed.
+
     var hash = hashR.getOrThrow();
 
-    var pathSpec = filePath;
-    if (pathSpec.startsWith(workTree)) {
-      pathSpec = filePath.substring(workTree.length);
-    }
-
     // Add it to the index
-    // LB: Wait is this a linear search over all files??
-    //     Maybe... but omitting it fully does not speed things up.
-    var entry = index.entries.firstWhereOrNull((e) => e.path == pathSpec);
-    var stat = FileStat.statSync(filePath);
 
     // Existing file
     if (entry != null) {
