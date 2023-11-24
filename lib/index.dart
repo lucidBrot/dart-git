@@ -52,7 +52,10 @@ extension Index on GitRepository {
   Result<GitIndexEntry> addFileToIndex(
     GitIndex index,
     String filePath,
+    {Stopwatch? stopwatch = null}
   ) {
+    stopwatch ??= Stopwatch();
+
     filePath = normalizePath(filePath);
 
     var file = fs.file(filePath);
@@ -61,11 +64,13 @@ extension Index on GitRepository {
       return Result.fail(ex);
     }
 
+    stopwatch.start();
     // LB: TODO: Why do we read the whole file even if it may already be present in
     //     the index?
     // Save that file as a blob
     var data = file.readAsBytesSync();
     var blob = GitBlob(data, null);
+    stopwatch.stop();
     var hashR = objStorage.writeObject(blob);
     if (hashR.isFailure) {
       return fail(hashR);
@@ -117,6 +122,7 @@ extension Index on GitRepository {
     var dir = fs.directory(dirPath);
 
     final stopwatch = Stopwatch();
+    final inner_stopwatch = Stopwatch();
 
     for (var fsEntity
         in dir.listSync(recursive: recursive, followLinks: false)) {
@@ -129,13 +135,14 @@ extension Index on GitRepository {
       }
 
       stopwatch.start();
-      var r = addFileToIndex(index, fsEntity.path);
+      var r = addFileToIndex(index, fsEntity.path, stopwatch: inner_stopwatch);
       stopwatch.stop();
       if (r.isFailure) {
         return fail(r);
       }
     }
     print("dart-git#index.dart: addDirectoryToIndex() spent ${(stopwatch..stop()).elapsed} on adding non-skipped files");
+    print("dart-git#index.dart: addDirectoryToIndex() Inner Stopwatch: ${(inner_stopwatch..stop()).elapsed} ");
 
     return Result(null);
   }
