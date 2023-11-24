@@ -64,13 +64,13 @@ extension Index on GitRepository {
       return Result.fail(ex);
     }
 
-    stopwatch.start();
     // LB: TODO: Why do we read the whole file even if it may already be present in
     //     the index?
     // Save that file as a blob
     var data = file.readAsBytesSync();
-    stopwatch.stop();
+    stopwatch.start();
     var blob = GitBlob(data, null);
+    stopwatch.stop();
     var hashR = objStorage.writeObject(blob);
     if (hashR.isFailure) {
       return fail(hashR);
