@@ -61,6 +61,8 @@ extension Index on GitRepository {
       return Result.fail(ex);
     }
 
+    // LB: TODO: Why do we read the whole file even if it may already be present in
+    //     the index?
     // Save that file as a blob
     var data = file.readAsBytesSync();
     var blob = GitBlob(data, null);
@@ -68,6 +70,8 @@ extension Index on GitRepository {
     if (hashR.isFailure) {
       return fail(hashR);
     }
+    // LB: TODO: how does this hash work? does that get recomputed every time?
+    //           how is it even used?
     var hash = hashR.getOrThrow();
 
     var pathSpec = filePath;
@@ -76,6 +80,7 @@ extension Index on GitRepository {
     }
 
     // Add it to the index
+    // LB: TODO: wait is this a linear search over all files??
     var entry = index.entries.firstWhereOrNull((e) => e.path == pathSpec);
     var stat = FileStat.statSync(filePath);
 
