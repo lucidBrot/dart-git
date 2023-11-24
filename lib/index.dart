@@ -103,25 +103,17 @@ extension Index on GitRepository {
   }) {
     /*
       This function takes 2 seconds.
-      Not sure if this case even ever happens, but:
-        First of all, in the case where the dirPath is a parent of the
-        gitDir, we could constrain this function's search to just the gitDir
-        and otherwise just do nothing. `followLinks` is set to `false` anyway,
-        so this would behave the same even if there were symlinks present.
-      But before rewriting this, I'd have to verify whether it is even slow.
-      ==> No. it only spends 0.006 seconds on that.
-     */
 
+     */
 
     dirPath = normalizePath(dirPath);
 
     var dir = fs.directory(dirPath);
 
-    final stopwatch_for_skipped_files = Stopwatch();
+    final stopwatch = Stopwatch();
 
     for (var fsEntity
         in dir.listSync(recursive: recursive, followLinks: false)) {
-      stopwatch_for_skipped_files.start();
       if (fsEntity.path.startsWith(gitDir)) {
         continue;
       }
@@ -129,14 +121,15 @@ extension Index on GitRepository {
       if (stat.type != FileSystemEntityType.file) {
         continue;
       }
-      stopwatch_for_skipped_files.stop();
 
+      stopwatch.start();
       var r = addFileToIndex(index, fsEntity.path);
+      stopwatch.stop();
       if (r.isFailure) {
         return fail(r);
       }
     }
-    print("dart-git#index.dart: addDirectoryToIndex() spent ${(stopwatch_for_skipped_files..stop()).elapsed} on skipped files");
+    print("dart-git#index.dart: addDirectoryToIndex() spent ${(stopwatch..stop()).elapsed} on adding non-skipped files");
 
     return Result(null);
   }
