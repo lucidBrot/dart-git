@@ -66,9 +66,10 @@ extension Index on GitRepository {
 
     // LB: TODO: Why do we read the whole file even if it may already be present in
     //     the index?
-    // Save that file as a blob
+    // Save that file as a blob (takes ~0.3 seconds)
     var data = file.readAsBytesSync();
     stopwatch.start();
+    // Hash the file (takes ~1.7 seconds)
     var blob = GitBlob(data, null);
     stopwatch.stop();
     var hashR = objStorage.writeObject(blob);
@@ -76,7 +77,7 @@ extension Index on GitRepository {
       return fail(hashR);
     }
     // LB: TODO: how does this hash work? does that get recomputed every time?
-    //           how is it even used?
+    //     if the mtime/ctime is the same as it used to be, I should just assume that it has not changed.
     var hash = hashR.getOrThrow();
 
     var pathSpec = filePath;
