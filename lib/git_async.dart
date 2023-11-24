@@ -141,7 +141,6 @@ class GitAsyncRepository {
   Future<dynamic> _compute(_Command cmd, dynamic inputData) async {
     var stopwatch = Stopwatch()..start();
     assert(_open);
-    print('dart-git._compute: _compute(${cmd.name}) pt1 took: ${(stopwatch..stop()).elapsed}');
     stopwatch.reset();
 
 
@@ -152,19 +151,16 @@ class GitAsyncRepository {
       //     Ok no, it is just sometimes randomly faster.
 
       _sendPort.send(_InputMsg(cmd, inputData));
-      print('dart-git._compute: _compute(${cmd.name}) Inner-part0 took: ${(stopwatch2..stop()).elapsed}');
+      print('dart-git._compute: _compute(${cmd.name}) Inner-part0 took: ${(stopwatch2).elapsed}');
       stopwatch2.reset();
       var output = await _receiveStream.first as _OutputMsg;
+      // when the comand is "add", this takes 2 seconds.
+      print('dart-git._compute: _compute(${cmd.name}) Inner-part2 took: ${(stopwatch2..stop()).elapsed}');
 
       assert(output.command == cmd, "Actual: ${output.command}, Exp: $cmd");
       assert(output.result is Result);
-      print('dart-git._compute: _compute(${cmd.name}) Inner-part2 took: ${(stopwatch2..stop()).elapsed}');
       return output.result;
     });
-
-    // this time is very short, because there was no await in this function, so the async computation of
-    // the `result` is maybe still not even started, let alone finished.. only queued.
-    print('dart-git._compute: _compute(${cmd.name}) pt2 took: ${(stopwatch..stop()).elapsed}');
     return result;
   }
 
