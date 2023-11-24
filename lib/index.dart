@@ -80,7 +80,8 @@ extension Index on GitRepository {
     }
 
     // Add it to the index
-    // LB: TODO: wait is this a linear search over all files??
+    // LB: Wait is this a linear search over all files??
+    //     Maybe... but omitting it fully does not speed things up.
     var entry = index.entries.firstWhereOrNull((e) => e.path == pathSpec);
     var stat = FileStat.statSync(filePath);
 
