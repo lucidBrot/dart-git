@@ -154,7 +154,8 @@ class GitAsyncRepository {
       print('dart-git._compute: _compute(${cmd.name}) Inner-part0 took: ${(stopwatch2).elapsed}');
       stopwatch2.reset();
       var output = await _receiveStream.first as _OutputMsg;
-      // when the comand is "add", this takes 2 seconds.
+      // when the command is "add", this takes 2 seconds without my ctime/mtime patch and ~0.2 without.
+      // when the command is "commit", this takes 2 seconds to make no commit (due to no new files).
       print('dart-git._compute: _compute(${cmd.name}) Inner-part2 took: ${(stopwatch2..stop()).elapsed}');
 
       assert(output.command == cmd, "Actual: ${output.command}, Exp: $cmd");
