@@ -73,20 +73,23 @@ extension Index on GitRepository {
     var entry = index.entries.firstWhereOrNull((e) => e.path == pathSpec);
     var stat = FileStat.statSync(filePath);
     if (entry != null &&
-        entry.cTime == stat.changed &&
-        entry.mTime == stat.modified &&
+        entry.cTime.isAtSameMomentAs(stat.changed) &&
+        entry.mTime.isAtSameMomentAs(stat.modified) &&
         entry.fileSize == stat.size){
         // We assume it is the same file.
         print("dart-git.addFileToIndex(${filePath}) assumed unchanged.");
         return Result(entry);
     }
     print("dart-git.addFileToIndex(${filePath}) potentially modified.");
-    print("\tentry${entry == null ? " is null " : " is non-null "}. FileSize ${entry==null?"unset":entry.fileSize} -> ${stat.size}");
+    print("\tentry${entry == null ? " is null " : " is non-null"}.");
+    if (entry != null) {
+      print("FileSize ${entry.fileSize} -> ${stat.size}");
+    }
     if (entry != null && entry.cTime != stat.changed){
       print("\tEntry ctime was ${entry.cTime}, stat ctime was ${stat.changed}.");
     }
     if (entry != null && entry.mTime != stat.modified){
-      print("\tEntry ctime was ${entry.mTime}, stat ctime was ${stat.modified}.");
+      print("\tEntry ctime was ${entry.mTime}, stat mtime was ${stat.modified}.");
     }
 
     // LB: Note that this reads and hashes the file, even if nothing changed.
