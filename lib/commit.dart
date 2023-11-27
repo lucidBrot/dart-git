@@ -38,8 +38,10 @@ extension Commit on GitRepository {
     // something between a2 and a3 is taking a second.
     var treeHashR = writeTree(index);
     if (treeHashR.isFailure) {
+      print("commit.dart#commit a2.1 FAIL: ${stopwatch.elapsed}");
       return fail(treeHashR);
     }
+    print("commit.dart#commit a2b: ${stopwatch.elapsed}");
     var treeHash = treeHashR.getOrThrow();
     var parents = <GitHash>[];
 
@@ -130,6 +132,7 @@ extension Commit on GitRepository {
   }
 
   Result<GitHash> writeTree(GitIndex index) {
+    // LB: TODO: this function needs optimization to speed up commit();
     var allTreeDirs = {''};
     var treeObjects = {'': GitTree.create()};
 
