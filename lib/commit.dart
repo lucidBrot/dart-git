@@ -21,7 +21,6 @@ extension Commit on GitRepository {
   }) {
     committer ??= author;
 
-    print("commit.dart#commit('${message}', '${author}', '${committer}', '${addAll}').");
     final stopwatch = Stopwatch()..start();
 
     if (addAll) {
@@ -31,21 +30,16 @@ extension Commit on GitRepository {
       }
     }
 
-    print("commit.dart#commit a1: ${stopwatch.elapsed}");
     var index = indexStorage.readIndex().getOrThrow();
 
-    print("commit.dart#commit a2: ${stopwatch.elapsed}");
     // something between a2 and a3 is taking a second.
     var treeHashR = writeTree(index);
     if (treeHashR.isFailure) {
-      print("commit.dart#commit a2.1 FAIL: ${stopwatch.elapsed}");
       return fail(treeHashR);
     }
-    print("commit.dart#commit a2b: ${stopwatch.elapsed}");
     var treeHash = treeHashR.getOrThrow();
     var parents = <GitHash>[];
 
-    print("commit.dart#commit a3: ${stopwatch.elapsed}");
     var headRefResult = head();
     if (headRefResult.isFailure) {
       if (headRefResult.error is! GitRefNotFound) {
@@ -54,13 +48,10 @@ extension Commit on GitRepository {
     } else {
       var headRef = headRefResult.getOrThrow();
       var parentRefResult = resolveReference(headRef);
-      print("commit.dart#commit a4: ${stopwatch.elapsed}");
       if (parentRefResult.isSuccess) {
         var parentRef = parentRefResult.getOrThrow();
         parents.add(parentRef.hash!);
-        print("commit.dart#commit a4a: ${stopwatch.elapsed}");
       }
-      print("commit.dart#commit a4b: ${stopwatch.elapsed}");
     }
 
     for (var parent in parents) {
@@ -76,10 +67,6 @@ extension Commit on GitRepository {
         return Result.fail(ex);
       }
     }
-    print("commit.dart#commit a5: ${stopwatch.elapsed}");
-
-    print("commit.dart#commit: prep took ${stopwatch.elapsed}");
-    stopwatch.reset();
 
     var commit = GitCommit.create(
       author: author,
@@ -93,9 +80,6 @@ extension Commit on GitRepository {
       return fail(hashR);
     }
     var hash = hashR.getOrThrow();
-
-    print("commit.dart#commit: create took ${stopwatch.elapsed}");
-    stopwatch.reset();
 
     // Update the ref of the current branch
     late String branchName;
@@ -125,8 +109,7 @@ extension Commit on GitRepository {
       return fail(saveRefResult);
     }
 
-    print("commit.dart#commit: Ref stuff took ${(stopwatch..stop()).elapsed}");
-    stopwatch.reset();
+    print("commit.dart#commit: Commit took ${(stopwatch..stop()).elapsed}");
 
     return Result(commit);
   }
