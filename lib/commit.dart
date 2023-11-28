@@ -115,11 +115,8 @@ extension Commit on GitRepository {
   }
 
   Result<GitHash> writeTree(GitIndex index) {
-    // LB: TODO: this function needs optimization to speed up commit();
-    final stopwatch = Stopwatch()..start();
     var allTreeDirs = {''};
     var treeObjects = {'': GitTree.create()};
-    print("commit.dart#writeTree: GitTree.create() took ${(stopwatch).elapsed}"); stopwatch.reset();
 
     for (var entry in index.entries) {
       var fullPath = entry.path;
@@ -177,7 +174,6 @@ extension Commit on GitRepository {
         treeObjects[dirName]!.entries.add(leaf),
       );
     }
-    print("commit.dart#writeTree: first big loop took ${(stopwatch).elapsed}"); stopwatch.reset();
     assert(treeObjects.containsKey(''));
 
     // Write all the tree objects
@@ -186,8 +182,6 @@ extension Commit on GitRepository {
     // sort dir paths by number of slashes
     var allDirs = allTreeDirs.toList();
     allDirs.sort(dirSortFunc);
-    print("commit.dart#writeTree: sorting took ${(stopwatch).elapsed}  (${allDirs.length} entries in allDirs)"); stopwatch.reset();
-    stopwatch..stop()..reset();
 
     // `reversed` -> start with the deepest folders (why?)
     for (var dir in allDirs.reversed) {
@@ -195,7 +189,6 @@ extension Commit on GitRepository {
       var entries = tree.entries.unlock;
       assert(entries.isNotEmpty);
 
-      stopwatch.start();
       for (var i = 0; i < entries.length; i++) {
         var leaf = entries[i];
 
@@ -224,7 +217,6 @@ extension Commit on GitRepository {
           hash: hash,
         );
       }
-      stopwatch.stop();
 
       assert(entries.isNotEmpty);
       tree = GitTree.create(entries);
@@ -237,7 +229,6 @@ extension Commit on GitRepository {
       assert(!hashMap.containsKey(dir));
       hashMap[dir] = hashR.getOrThrow();
     }
-    print("commit.dart#writeTree: second big loop's inner loop took ${(stopwatch).elapsed}"); stopwatch.reset();
 
     return Result(hashMap['']!);
   }
