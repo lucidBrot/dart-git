@@ -20,32 +20,27 @@ extension Index on GitRepository {
     }
     var index = indexR.getOrThrow();
 
-    print("git-dart.add() 2 took ${stopwatch.elapsed}.");
-    stopwatch.reset();
-
     var stat = fs.statSync(pathSpec);
     if (stat.type == FileSystemEntityType.file) {
       var result = addFileToIndex(index, pathSpec);
-      print("git-dart.add() 3a took ${stopwatch.elapsed}.");
-      stopwatch.reset();
       if (result.isFailure) {
+        print("git-dart.add() a took ${(stopwatch..stop()).elapsed}.");
         return fail(result);
       }
     } else if (stat.type == FileSystemEntityType.directory) {
       var result = addDirectoryToIndex(index, pathSpec, recursive: true);
-      print("git-dart.add() 3b took ${stopwatch.elapsed}.");
-      stopwatch.reset();
       if (result.isFailure) {
+        print("git-dart.add() b took ${(stopwatch..stop()).elapsed}.");
         return fail(result);
       }
     } else {
       var ex = InvalidFileType(pathSpec);
+      print("git-dart.add() c took ${(stopwatch..stop()).elapsed}.");
       return Result.fail(ex);
     }
 
     var result = indexStorage.writeIndex(index);
-    print("git-dart.add() 4 took ${(stopwatch..stop()).elapsed}.");
-    stopwatch.reset();
+    print("git-dart.add() d took ${(stopwatch..stop()).elapsed}.");
     return result;
   }
 
