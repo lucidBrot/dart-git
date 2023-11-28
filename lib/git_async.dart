@@ -144,25 +144,21 @@ class GitAsyncRepository {
     stopwatch.reset();
 
 
-    var result = _lock.synchronized(() async {
+    return _lock.synchronized(() async {
       var stopwatch2 = Stopwatch()..start();
-      // LB: Somehow, adding this line and the line `stopwatch2.reset()` below
-      //     speeds the add(".") call up by 5 seconds??
-      //     Ok no, it is just sometimes randomly faster.
 
       _sendPort.send(_InputMsg(cmd, inputData));
       print('dart-git._compute: _compute(${cmd.name}) Inner-part0 took: ${(stopwatch2).elapsed}');
       stopwatch2.reset();
       var output = await _receiveStream.first as _OutputMsg;
       // when the command is "add", this takes 2 seconds without my ctime/mtime patch and ~0.2 without.
-      // when the command is "commit", this takes 2 seconds to make no commit (due to no new files).
-      print('dart-git._compute: _compute(${cmd.name}) Inner-part2 took: ${(stopwatch2..stop()).elapsed}');
+      // when the command is "commit", this takes 2 seconds but only due to asserts that get removed for release builds..
+      print('dart-git._compute: _compute(${cmd.name}) Inner-part1 took: ${(stopwatch2..stop()).elapsed}');
 
       assert(output.command == cmd, "Actual: ${output.command}, Exp: $cmd");
       assert(output.result is Result);
       return output.result;
     });
-    return result;
   }
 
   Future<Result<List<String>>> branches() async =>
