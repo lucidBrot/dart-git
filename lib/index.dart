@@ -46,7 +46,7 @@ extension Index on GitRepository {
 
   Result<GitIndexEntry> addFileToIndex(
     GitIndex index,
-    String filePath
+    String filePath,
   ) {
 
     filePath = normalizePath(filePath);
