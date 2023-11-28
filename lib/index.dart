@@ -46,10 +46,8 @@ extension Index on GitRepository {
 
   Result<GitIndexEntry> addFileToIndex(
     GitIndex index,
-    String filePath,
-    {Stopwatch? stopwatch = null}
+    String filePath
   ) {
-    stopwatch ??= Stopwatch();
 
     filePath = normalizePath(filePath);
 
@@ -72,33 +70,15 @@ extension Index on GitRepository {
         entry.mTime.isAtSameMomentAs(stat.modified) &&
         entry.fileSize == stat.size){
         // We assume it is the same file.
-        print("dart-git.addFileToIndex(${filePath}) assumed unchanged.");
         return Result(entry);
-    }
-    print("dart-git.addFileToIndex(${filePath}) potentially modified.");
-    if (false) { // just for debugging verbosity "logs"
-      print("\tentry${entry == null ? " is null " : " is non-null"}.");
-      if (entry != null) {
-        print("FileSize ${entry.fileSize} -> ${stat.size}");
-      }
-      if (entry != null && entry.cTime != stat.changed) {
-        print("\tEntry ctime was ${entry.cTime}, stat ctime was ${stat
-            .changed}.");
-      }
-      if (entry != null && entry.mTime != stat.modified) {
-        print("\tEntry ctime was ${entry.mTime}, stat mtime was ${stat
-            .modified}.");
-      }
     }
 
     // LB: Note that this reads and hashes the file, even if nothing changed.
     //     .. hence the check above using the ctime/mtime.
     // Save that file as a blob (takes ~0.3 seconds)
     var data = file.readAsBytesSync();
-    stopwatch.start();
-    // Hash the file (takes ~1.7 seconds)
+    // Hash the file (takes time!)
     var blob = GitBlob(data, null);
-    stopwatch.stop();
     var hashR = objStorage.writeObject(blob);
     if (hashR.isFailure) {
       return fail(hashR);
@@ -130,17 +110,9 @@ extension Index on GitRepository {
     String dirPath, {
     bool recursive = false,
   }) {
-    /*
-      This function takes 2 seconds.
-
-     */
-
     dirPath = normalizePath(dirPath);
-
     var dir = fs.directory(dirPath);
-
     final stopwatch = Stopwatch();
-    final inner_stopwatch = Stopwatch();
 
     for (var fsEntity
         in dir.listSync(recursive: recursive, followLinks: false)) {
@@ -153,15 +125,13 @@ extension Index on GitRepository {
       }
 
       stopwatch.start();
-      var r = addFileToIndex(index, fsEntity.path, stopwatch: inner_stopwatch);
+      var r = addFileToIndex(index, fsEntity.path);
       stopwatch.stop();
       if (r.isFailure) {
         return fail(r);
       }
     }
     print("dart-git#index.dart: addDirectoryToIndex() spent ${(stopwatch..stop()).elapsed} on adding non-skipped files");
-    print("dart-git#index.dart: addDirectoryToIndex() Inner Stopwatch: ${(inner_stopwatch..stop()).elapsed} ");
-
     return Result(null);
   }
 
